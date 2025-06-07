@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>工作总结 - 工作汇报系统</title>
+    <link rel="stylesheet" href="./css/main.css">
+    <link rel="stylesheet" href="./css/components.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>工作汇报系统</h1>
+            <nav>
+                <ul>
+                    <li><a href="index.html">首页</a></li>
+                    <li><a href="timeline.html">时间线</a></li>
+                    <li><a href="summary.html" class="active">工作总结</a></li>
+                    <li><a href="file-index.html">文件索引</a></li>
+                </ul>
+            </nav>
+        </header>
+        
+        <main>
+            <section class="summary-controls">
+                <h2>工作总结</h2>
+                <div class="controls">
+                    <button id="create-summary-btn" class="btn primary">创建总结</button>
+                    <div class="filter">
+                        <label for="summary-type">类型：</label>
+                        <select id="summary-type">
+                            <option value="weekly">周报</option>
+                            <option value="monthly">月报</option>
+                            <option value="quarterly">季度报告</option>
+                            <option value="yearly">年度总结</option>
+                        </select>
+                    </div>
+                </div>
+            </section>
+            
+            <section class="summary-list-container">
+                <div class="summary-list" id="summary-list">
+                    <!-- 总结列表将通过JavaScript动态生成 -->
+                    <p class="empty-message">暂无工作总结</p>
+                </div>
+            </section>
+            
+            <div id="summary-modal" class="modal">
+                <div class="modal-content modal-lg">
+                    <span class="close">&times;</span>
+                    <h2 id="summary-modal-title">创建工作总结</h2>
+                    <form id="summary-form">
+                        <div class="form-group">
+                            <label for="summary-title">标题：</label>
+                            <input type="text" id="summary-title" placeholder="输入总结标题" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="summary-period-type">周期类型：</label>
+                            <select id="summary-period-type">
+                                <option value="weekly">周报</option>
+                                <option value="monthly">月报</option>
+                                <option value="quarterly">季度报告</option>
+                                <option value="yearly">年度总结</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="summary-start-date">开始日期：</label>
+                            <input type="date" id="summary-start-date" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="summary-end-date">结束日期：</label>
+                            <input type="date" id="summary-end-date" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="summary-content">内容：</label>
+                            <textarea id="summary-content" rows="10" placeholder="输入工作总结内容" required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <button type="button" id="generate-from-timeline" class="btn secondary">从时间线生成</button>
+                            <span class="hint">（根据选择的日期范围自动生成总结草稿）</span>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn primary">保存</button>
+                            <button type="button" id="export-summary-btn" class="btn">导出</button>
+                            <button type="button" id="cancel-summary-btn" class="btn">取消</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <div id="view-summary-modal" class="modal">
+                <div class="modal-content modal-lg">
+                    <span class="close">&times;</span>
+                    <h2 id="view-summary-title">查看工作总结</h2>
+                    <div id="view-summary-content">
+                        <!-- 内容将通过JavaScript动态填充 -->
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" id="edit-summary-btn" class="btn primary">编辑</button>
+                        <button type="button" id="delete-summary-btn" class="btn danger">删除</button>
+                        <button type="button" id="export-view-summary-btn" class="btn">导出</button>
+                        <button type="button" id="close-view-summary-btn" class="btn">关闭</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+        <footer>
+            <p>工作汇报系统 &copy; 2023</p>
+        </footer>
+    </div>
+
+    <script src="./js/utils.js"></script>
+    <script src="./js/storage.js"></script>
+    <script src="./js/summary.js"></script>
+</body>
+</html>

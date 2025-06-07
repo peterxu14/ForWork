@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>工作汇报系统</title>
+    <link rel="stylesheet" href="./css/main.css">
+    <link rel="stylesheet" href="./css/components.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>工作汇报系统</h1>
+            <nav>
+                <ul>
+                    <li><a href="index.html" class="active">首页</a></li>
+                    <li><a href="timeline.html">时间线</a></li>
+                    <li><a href="summary.html">工作总结</a></li>
+                    <li><a href="file-index.html">文件索引</a></li>
+                </ul>
+            </nav>
+        </header>
+        
+        <main>
+            <section class="welcome-section">
+                <h2>欢迎使用工作汇报系统</h2>
+                <p>这是一个本地工作汇报工具，帮助您记录日常工作内容、整理工作总结，并管理相关文件索引。</p>
+            </section>
+            
+            <section class="quick-access">
+                <h2>快速访问</h2>
+                <div class="card-container">
+                    <div class="card" onclick="window.location.href='timeline.html'">
+                        <h3>时间线</h3>
+                        <p>查看和记录每日工作内容</p>
+                    </div>
+                    <div class="card" onclick="window.location.href='summary.html'">
+                        <h3>工作总结</h3>
+                        <p>创建和编辑工作总结</p>
+                    </div>
+                    <div class="card" onclick="window.location.href='file-index.html'">
+                        <h3>文件索引</h3>
+                        <p>管理和搜索文件</p>
+                    </div>
+                </div>
+            </section>
+            
+            <section class="recent-activities" id="recent-activities">
+                <h2>最近活动</h2>
+                <div class="activity-list">
+                    <!-- 这里将通过JavaScript动态加载最近的活动 -->
+                    <p class="empty-message">暂无最近活动</p>
+                </div>
+            </section>
+        </main>
+        
+        <footer>
+            <p>工作汇报系统 &copy; 2023</p>
+        </footer>
+    </div>
+
+    <script src="./js/utils.js"></script>
+    <script src="./js/storage.js"></script>
+    <script src="./js/app.js"></script>
+</body>
+</html>

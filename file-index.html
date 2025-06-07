@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文件索引 - 工作汇报系统</title>
+    <link rel="stylesheet" href="./css/main.css">
+    <link rel="stylesheet" href="./css/components.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>工作汇报系统</h1>
+            <nav>
+                <ul>
+                    <li><a href="index.html">首页</a></li>
+                    <li><a href="timeline.html">时间线</a></li>
+                    <li><a href="summary.html">工作总结</a></li>
+                    <li><a href="file-index.html" class="active">文件索引</a></li>
+                </ul>
+            </nav>
+        </header>
+        
+        <main>
+            <section class="file-controls">
+                <h2>文件索引</h2>
+                <!-- 在控制区域添加新按钮 -->
+                <div class="controls">
+                    <button id="add-file-index-btn" class="btn primary">添加文件</button>
+                    <button id="read-folder-btn" class="btn secondary">读取项目文件夹</button>
+                    <div class="search-box">
+                        <input type="text" id="file-search" placeholder="搜索文件...">
+                        <button id="search-btn" class="btn">搜索</button>
+                    </div>
+                </div>
+            </section>
+            
+            <section class="file-tags">
+                <h3>标签筛选</h3>
+                <div class="tags-container" id="file-tags">
+                    <!-- 标签将通过JavaScript动态生成 -->
+                </div>
+            </section>
+            
+            <section class="file-list-container">
+                <div class="file-list" id="file-index-list">
+                    <!-- 文件列表将通过JavaScript动态生成 -->
+                    <p class="empty-message">暂无文件索引</p>
+                </div>
+            </section>
+            
+            <div id="file-modal" class="modal">
+                <div class="modal-content">
+                    <span class="close">&times;</span>
+                    <h2 id="file-modal-title">添加文件索引</h2>
+                    <form id="file-form">
+                        <div class="form-group">
+                            <label for="file-name">文件名：</label>
+                            <input type="text" id="file-name" placeholder="输入文件名" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="file-path">文件路径：</label>
+                            <input type="text" id="file-path" placeholder="输入文件完整路径" required>
+                            <button type="button" id="browse-btn" class="btn secondary">浏览...</button>
+                        </div>
+                        <div class="form-group">
+                            <label for="file-description">描述：</label>
+                            <textarea id="file-description" rows="3" placeholder="输入文件描述"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="file-tags-input">标签：</label>
+                            <input type="text" id="file-tags-input" placeholder="输入标签，用逗号分隔">
+                        </div>
+                        <div class="form-group">
+                            <label for="file-date">添加日期：</label>
+                            <input type="date" id="file-date" required>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn primary">保存</button>
+                            <button type="button" id="cancel-file-btn" class="btn">取消</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <div id="view-file-modal" class="modal">
+                <div class="modal-content">
+                    <span class="close">&times;</span>
+                    <h2 id="view-file-title">查看文件索引</h2>
+                    <div id="view-file-content">
+                        <!-- 内容将通过JavaScript动态填充 -->
+                    </div>
+                    <div class="form-actions">
+                        <button id="testOpenFileBtn">打开文件</button>
+                        <button type="button" id="edit-file-btn" class="btn">编辑</button>
+                        <button type="button" id="delete-file-btn" class="btn danger">删除</button>
+                        <button type="button" id="close-view-file-btn" class="btn">关闭</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+        <footer>
+            <p>工作汇报系统 &copy; 2023</p>
+        </footer>
+    </div>
+
+    <script src="./js/utils.js"></script>
+    <script src="./js/storage.js"></script>
+    <script src="./js/file-index.js"></script>
+</body>
+</html>

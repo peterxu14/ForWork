@@ -22,12 +22,6 @@ function initFileIndex() {
     // 加载标签
     loadTags();
     
-    // 绑定添加按钮事件
-    const addFileBtn = document.getElementById('add-file-index-btn');
-    if (addFileBtn) {
-        addFileBtn.addEventListener('click', showAddFileModal);
-    }
-    
     // 绑定搜索按钮事件
     const searchBtn = document.getElementById('search-btn');
     if (searchBtn) {
@@ -42,6 +36,12 @@ function initFileIndex() {
                 handleSearch();
             }
         });
+    }
+    
+    // 绑定标签展开/收起按钮事件
+    const toggleTagsBtn = document.getElementById('toggle-tags-btn');
+    if (toggleTagsBtn) {
+        toggleTagsBtn.addEventListener('click', toggleTagsDisplay);
     }
     
     // 绑定模态框关闭按钮事件
@@ -86,12 +86,16 @@ function initFileIndex() {
         openFileBtn.addEventListener('click', handleOpenFile);
     }
     
-    // 绑定浏览按钮事件（这在浏览器环境中可能受限）
-    const browseBtn = document.getElementById('browse-btn');
-    if (browseBtn) {
-        browseBtn.addEventListener('click', () => {
-            showNotification('由于浏览器安全限制，无法直接浏览文件系统。请手动输入文件路径。', 'warning');
-        });
+    // 绑定选择文件夹按钮事件
+    const selectFolderBtn = document.getElementById('select-folder-btn');
+    if (selectFolderBtn) {
+        selectFolderBtn.addEventListener('click', handleSelectFolder);
+    }
+    
+    // 绑定上级目录按钮事件
+    const goUpBtn = document.getElementById('go-up-btn');
+    if (goUpBtn) {
+        goUpBtn.addEventListener('click', handleGoUp);
     }
     
     // 检查URL参数是否有指定文件ID
@@ -99,19 +103,56 @@ function initFileIndex() {
     if (urlParams.id) {
         showFileDetails(urlParams.id);
     }
+}
+
+// 标签展开/收起功能
+function toggleTagsDisplay() {
+    const tagsContainer = document.getElementById('file-tags');
+    if (!tagsContainer) return;
     
-    // 在initFileIndex函数中添加绑定读取文件夹按钮事件
-    const readFolderBtn = document.getElementById('read-folder-btn');
-    if (readFolderBtn) {
-        readFolderBtn.addEventListener('click', handleReadFolder);
+    // 切换显示状态
+    if (tagsContainer.classList.contains('collapsed')) {
+        // 展开标签
+        tagsContainer.classList.remove('collapsed');
+        // 显示所有标签
+        const tags = tagsContainer.querySelectorAll('.tag');
+        tags.forEach(tag => tag.style.display = '');
+    } else {
+        // 收起标签
+        tagsContainer.classList.add('collapsed');
+        // 只显示活跃的标签和前5个标签
+        const tags = tagsContainer.querySelectorAll('.tag');
+        let visibleCount = 0;
+        
+        // 首先显示所有活跃标签
+        const activeTags = tagsContainer.querySelectorAll('.tag.active');
+        activeTags.forEach(tag => {
+            tag.style.display = '';
+            visibleCount++;
+        });
+        
+        // 然后显示非活跃标签，直到总共显示5个
+        tags.forEach(tag => {
+            if (!tag.classList.contains('active')) {
+                if (visibleCount < 5) {
+                    tag.style.display = '';
+                    visibleCount++;
+                } else {
+                    tag.style.display = 'none';
+                }
+            }
+        });
     }
 }
 
-// 添加处理读取文件夹的函数
+// 添加全局变量
+let currentDirectory = null;
+let directoryHistory = [];
+
+// 修改处理读取文件夹的函数
 async function handleReadFolder() {
     try {
-        // 默认文件夹路径
-        const folderPath = 'F:\\绩效填报项目归档整理';
+        console.log('开始读取当前文件夹...');
         
         // 检查是否在Electron环境中
         if (!window.electronAPI) {
@@ -119,42 +160,217 @@ async function handleReadFolder() {
             return;
         }
         
-        // 显示加载提示
-        showNotification('正在读取文件夹结构，请稍候...', 'info');
-        
-        // 调用主进程读取文件夹结构
-        const result = await window.electronAPI.readFolderStructure(folderPath);
-        
-        if (!result.success) {
-            showNotification(`读取文件夹失败: ${result.error}`, 'error');
+        // 检查是否已选择文件夹
+        if (!currentDirectory) {
+            showNotification('请先选择一个文件夹', 'info');
+            await handleSelectFolder();
             return;
         }
         
-        // 处理项目数据
-        const projects = result.data;
+        // 显示加载提示
+        showNotification('正在读取文件夹结构，请稍候...', 'info');
         
-        // 清空现有文件索引
-        if (confirm('是否清空现有文件索引并导入新的项目文件？')) {
-            // 清空文件索引
-            Storage.set(Storage.keys.FILES, []);
-            
-            // 导入项目文件
-            let importCount = 0;
-            for (const project of projects) {
-                importCount += await importProjectFiles(project);
-            }
-            
-            // 重新加载文件索引和标签
-            loadFileIndex();
-            loadTags();
-            
-            showNotification(`成功导入 ${importCount} 个文件索引`, 'success');
-        }
+        // 浏览当前目录
+        await browseDirectory(currentDirectory);
+        
     } catch (error) {
         console.error('读取文件夹错误:', error);
         showNotification(`读取文件夹时发生错误: ${error.message}`, 'error');
     }
 }
+
+// 选择文件夹
+async function handleSelectFolder() {
+    try {
+        if (!window.electronAPI) {
+            showNotification('此功能仅在Electron应用中可用', 'error');
+            return;
+        }
+        
+        const result = await window.electronAPI.selectFolder();
+        
+        if (result.success) {
+            currentDirectory = result.path;
+            updateCurrentPathDisplay();
+            await browseDirectory(currentDirectory);
+        } else {
+            showNotification('未选择文件夹', 'info');
+        }
+    } catch (error) {
+        showNotification(`选择文件夹失败: ${error.message}`, 'error');
+    }
+}
+
+// 浏览目录
+async function browseDirectory(dirPath) {
+    try {
+        if (!window.electronAPI) {
+            showNotification('此功能仅在Electron应用中可用', 'error');
+            return;
+        }
+        
+        // 显示加载提示
+        showNotification('正在加载文件夹内容...', 'info');
+        
+        // 调用主进程浏览目录
+        const result = await window.electronAPI.browseDirectory(dirPath);
+        
+        if (!result.success) {
+            showNotification(`浏览文件夹失败: ${result.error}`, 'error');
+            return;
+        }
+        
+        // 更新当前目录
+        currentDirectory = result.data.currentPath;
+        
+        // 更新界面
+        updateCurrentPathDisplay();
+        updateNavigationButtons();
+        displayDirectoryContents(result.data);
+        
+        showNotification('文件夹内容已加载', 'success');
+    } catch (error) {
+        showNotification(`浏览文件夹失败: ${error.message}`, 'error');
+    }
+}
+
+// 返回上级目录
+async function handleGoUp() {
+    if (currentDirectory) {
+        const parentPath = getParentDirectory(currentDirectory);
+        if (parentPath !== currentDirectory) {
+            await browseDirectory(parentPath);
+        }
+    }
+}
+
+// 获取父目录路径的辅助函数
+function getParentDirectory(dirPath) {
+    // 处理Windows路径（使用反斜杠）
+    if (dirPath.includes('\\')) {
+        // 如果是根目录（如 C:\），则返回自身
+        if (/^[A-Za-z]:\\$/.test(dirPath)) {
+            return dirPath;
+        }
+        // 移除末尾的反斜杠（如果有）
+        const normalizedPath = dirPath.endsWith('\\') ? dirPath.slice(0, -1) : dirPath;
+        // 查找最后一个反斜杠的位置
+        const lastSlashIndex = normalizedPath.lastIndexOf('\\');
+        // 如果找不到反斜杠或者是驱动器根目录，则返回驱动器根目录
+        if (lastSlashIndex <= 2) { // 如 C:\ 的情况
+            return dirPath.substring(0, 3); // 返回如 C:\
+        }
+        // 返回父目录
+        return normalizedPath.substring(0, lastSlashIndex) + '\\';
+    } 
+    // 处理Unix路径（使用正斜杠）
+    else if (dirPath.includes('/')) {
+        // 如果是根目录，则返回自身
+        if (dirPath === '/') {
+            return dirPath;
+        }
+        // 移除末尾的斜杠（如果有）
+        const normalizedPath = dirPath.endsWith('/') ? dirPath.slice(0, -1) : dirPath;
+        // 查找最后一个斜杠的位置
+        const lastSlashIndex = normalizedPath.lastIndexOf('/');
+        // 如果找不到斜杠，则返回根目录
+        if (lastSlashIndex === -1) {
+            return '/';
+        }
+        // 如果是根目录下的文件夹，则返回根目录
+        if (lastSlashIndex === 0) {
+            return '/';
+        }
+        // 返回父目录
+        return normalizedPath.substring(0, lastSlashIndex) + '/';
+    }
+    // 如果没有路径分隔符，则返回原路径
+    return dirPath;
+}
+
+// 进入目录
+async function enterDirectory(dirPath) {
+    directoryHistory.push(currentDirectory);
+    await browseDirectory(dirPath);
+}
+
+// 显示目录内容
+function displayDirectoryContents(data) {
+    const fileListElement = document.getElementById('file-index-list');
+    if (!fileListElement) return;
+    
+    // 清空文件列表
+    fileListElement.innerHTML = '';
+    
+    // 合并文件夹和文件
+    const allItems = [...data.directories, ...data.files];
+    
+    if (allItems.length === 0) {
+        fileListElement.innerHTML = '<p class="empty-message">此文件夹为空</p>';
+        return;
+    }
+    
+    allItems.forEach(item => {
+        const itemElement = document.createElement('div');
+        itemElement.className = `list-item ${item.type}`;
+        
+        const icon = item.type === 'directory' ? '📁' : '📄';
+        
+        itemElement.innerHTML = `
+            <div class="list-item-header" style="cursor: pointer;">
+                <span class="list-item-icon">${icon}</span>
+                <span class="list-item-title">${escapeHtml(item.name)}</span>
+                <span class="list-item-size">${item.size}</span>
+                <span class="list-item-date">${formatDateForDisplay(item.modified)}</span>
+            </div>
+        `;
+        
+        // 添加点击事件监听器
+        const headerElement = itemElement.querySelector('.list-item-header');
+        if (headerElement) {
+            headerElement.addEventListener('click', () => {
+                if (item.type === 'directory') {
+                    enterDirectory(item.path);
+                } else {
+                    openFileFromBrowser(item.path);
+                }
+            });
+        }
+        
+        fileListElement.appendChild(itemElement);
+    });
+}
+
+// 从浏览器打开文件
+function openFileFromBrowser(filePath) {
+    if (window.electronAPI) {
+        window.electronAPI.openFile(filePath)
+            .then(result => {
+                showNotification('文件已打开', 'success');
+            })
+            .catch(error => {
+                showNotification(`打开文件时发生错误: ${error.message}`, 'error');
+            });
+    }
+}
+
+// 更新当前路径显示
+function updateCurrentPathDisplay() {
+    const pathDisplay = document.getElementById('current-path-display');
+    if (pathDisplay && currentDirectory) {
+        pathDisplay.textContent = currentDirectory;
+    }
+}
+
+// 更新导航按钮状态
+function updateNavigationButtons() {
+    const goUpBtn = document.getElementById('go-up-btn');
+    if (goUpBtn) {
+        goUpBtn.disabled = !currentDirectory;
+    }
+}
+
+// ... 其他现有函数 ...
 
 // 导入项目文件的函数
 async function importProjectFiles(project) {

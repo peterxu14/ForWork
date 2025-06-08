@@ -173,23 +173,89 @@ ipcMain.handle('select-file', async () => {
   }
 });
 
-// 添加文件夹选择对话框处理
+// 添加选择文件夹的IPC处理
 ipcMain.handle('select-folder', async () => {
   const { dialog } = require('electron');
   try {
     const result = await dialog.showOpenDialog(mainWindow, {
-      properties: ['openDirectory']
+      properties: ['openDirectory'],
+      title: '选择要浏览的文件夹'
     });
     
-    if (result.canceled) {
-      return { success: false, cancelled: true };
+    if (!result.canceled && result.filePaths.length > 0) {
+      return { success: true, path: result.filePaths[0] };
     } else {
-      return { success: true, folderPath: result.filePaths[0] };
+      return { success: false, error: '用户取消选择' };
     }
   } catch (error) {
     return { success: false, error: error.message };
   }
 });
+
+// 修改读取文件夹结构的函数，支持浏览模式
+ipcMain.handle('browse-directory', async (event, folderPath) => {
+  try {
+    const structure = await browseDirectory(folderPath);
+    return { success: true, data: structure };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+// 新增浏览目录的函数
+async function browseDirectory(folderPath) {
+  // 检查路径是否存在
+  if (!fs.existsSync(folderPath)) {
+    throw new Error(`路径不存在: ${folderPath}`);
+  }
+
+  // 获取文件夹内容
+  const items = fs.readdirSync(folderPath, { withFileTypes: true });
+  
+  const directories = [];
+  const files = [];
+  
+  // 分类处理文件和文件夹
+  for (const item of items) {
+    const itemPath = path.join(folderPath, item.name);
+    const stats = fs.statSync(itemPath);
+    
+    if (item.isDirectory()) {
+      directories.push({
+        name: item.name,
+        path: itemPath,
+        type: 'directory',
+        size: '-',
+        modified: stats.mtime.toISOString()
+      });
+    } else {
+      files.push({
+        name: item.name,
+        path: itemPath,
+        type: 'file',
+        size: formatFileSize(stats.size),
+        modified: stats.mtime.toISOString(),
+        extension: path.extname(item.name)
+      });
+    }
+  }
+  
+  return {
+    currentPath: folderPath,
+    parentPath: path.dirname(folderPath),
+    directories: directories.sort((a, b) => a.name.localeCompare(b.name)),
+    files: files.sort((a, b) => a.name.localeCompare(b.name))
+  };
+}
+
+// 文件大小格式化函数
+function formatFileSize(bytes) {
+  if (bytes === 0) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
 
 // 添加读取文件内容功能
 ipcMain.handle('read-file', async (event, filePath) => {
@@ -208,6 +274,59 @@ ipcMain.handle('read-file', async (event, filePath) => {
       modifiedAt: stats.mtime
     };
   } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+// 添加复制文件功能
+ipcMain.handle('copy-files', async (event, sourceFiles, targetDirectory) => {
+  try {
+    console.log('复制文件:', sourceFiles, '到目标目录:', targetDirectory);
+    
+    // 检查目标目录是否存在
+    if (!fs.existsSync(targetDirectory)) {
+      return { success: false, error: '目标目录不存在' };
+    }
+    
+    let copiedCount = 0;
+    const errors = [];
+    
+    // 遍历源文件列表
+    for (const sourcePath of sourceFiles) {
+      try {
+        // 检查源文件是否存在
+        if (!fs.existsSync(sourcePath)) {
+          errors.push(`源文件不存在: ${sourcePath}`);
+          continue;
+        }
+        
+        // 获取文件名
+        const fileName = path.basename(sourcePath);
+        const targetPath = path.join(targetDirectory, fileName);
+        
+        // 检查目标文件是否已存在
+        if (fs.existsSync(targetPath)) {
+          // 可以选择跳过、重命名或覆盖，这里选择覆盖
+          console.log(`目标文件已存在，将覆盖: ${targetPath}`);
+        }
+        
+        // 复制文件
+        fs.copyFileSync(sourcePath, targetPath);
+        copiedCount++;
+        
+        console.log(`成功复制文件: ${sourcePath} -> ${targetPath}`);
+      } catch (fileError) {
+        errors.push(`复制文件失败 ${sourcePath}: ${fileError.message}`);
+      }
+    }
+    
+    return { 
+      success: true, 
+      copied: copiedCount,
+      errors: errors.length > 0 ? errors : null
+    };
+  } catch (error) {
+    console.error('复制文件异常:', error);
     return { success: false, error: error.message };
   }
 });

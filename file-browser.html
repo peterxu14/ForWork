@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文件浏览器 - 工作汇报系统</title>
+    <link rel="stylesheet" href="./css/main.css">
+    <link rel="stylesheet" href="./css/components.css">
+    <style>
+        /* 文件浏览器特定样式 */
+        .file-browser-container {
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 250px);
+            min-height: 400px;
+        }
+        
+        .file-browser-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .file-browser-content {
+            flex: 1;
+            overflow: auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: white;
+        }
+        
+        .file-browser-footer {
+            margin-top: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .file-list-header {
+            display: grid;
+            grid-template-columns: 40px 2fr 1fr 1fr;
+            padding: 10px;
+            background-color: #f5f5f5;
+            font-weight: bold;
+            border-bottom: 1px solid #ddd;
+            position: sticky;
+            top: 0;
+        }
+        
+        .file-list-item {
+            display: grid;
+            grid-template-columns: 40px 2fr 1fr 1fr;
+            padding: 8px 10px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .file-list-item:hover {
+            background-color: #f0f7ff;
+        }
+        
+        .file-list-item.directory {
+            color: #2196f3;
+        }
+        
+        .file-list-item.selected {
+            background-color: #e3f2fd;
+        }
+        
+        .file-icon {
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .file-name {
+            display: flex;
+            align-items: center;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .file-size, .file-date {
+            display: flex;
+            align-items: center;
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .drop-zone {
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            margin-top: 1rem;
+            transition: border-color 0.3s, background-color 0.3s;
+        }
+        
+        .drop-zone.active {
+            border-color: #2196f3;
+            background-color: #e3f2fd;
+        }
+        
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            padding: 8px 0;
+            margin-bottom: 1rem;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        
+        .breadcrumb-item {
+            display: inline-flex;
+            align-items: center;
+        }
+        
+        .breadcrumb-item:not(:last-child)::after {
+            content: '/';
+            margin: 0 8px;
+            color: #6c757d;
+        }
+        
+        .breadcrumb-item a {
+            color: #007bff;
+            text-decoration: none;
+        }
+        
+        .breadcrumb-item a:hover {
+            text-decoration: underline;
+        }
+        
+        .breadcrumb-item.active {
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>工作汇报系统</h1>
+            <nav>
+                <ul>
+                    <li><a href="index.html">首页</a></li>
+                    <li><a href="timeline.html">时间线</a></li>
+                    <li><a href="summary.html">工作总结</a></li>
+                    <li><a href="file-index.html">文件索引</a></li>
+                    <li><a href="file-browser.html" class="active">文件浏览器</a></li>
+                </ul>
+            </nav>
+        </header>
+        
+        <main>
+            <section>
+                <div class="file-browser-header">
+                    <h2>文件浏览器</h2>
+                    <div class="controls">
+                        <button id="select-folder-btn" class="btn primary">选择文件夹</button>
+                        <button id="refresh-btn" class="btn secondary">刷新</button>
+                    </div>
+                </div>
+                
+                <div class="breadcrumb" id="path-breadcrumb">
+                    <div class="breadcrumb-item active">请选择文件夹</div>
+                </div>
+                
+                <div class="file-browser-container">
+                    <div class="file-browser-content">
+                        <div class="file-list-header">
+                            <div class="file-icon"></div>
+                            <div class="file-name">名称</div>
+                            <div class="file-size">大小</div>
+                            <div class="file-date">修改日期</div>
+                        </div>
+                        <div id="file-list" class="file-list">
+                            <p class="empty-message">请选择一个文件夹以查看内容</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="drop-zone" id="drop-zone">
+                    <p>拖拽文件到此处上传到当前文件夹</p>
+                </div>
+                
+                <div class="file-browser-footer">
+                    <div id="status-bar">就绪</div>
+                    <div>
+                        <button id="go-up-btn" class="btn" disabled>上级目录</button>
+                    </div>
+                </div>
+            </section>
+        </main>
+        
+        <footer>
+            <p>工作汇报系统 &copy; 2023</p>
+        </footer>
+    </div>
+
+    <script src="./js/utils.js"></script>
+    <script src="./js/file-browser.js"></script>
+</body>
+</html>

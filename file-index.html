@@ -24,10 +24,16 @@
         <main>
             <section class="file-controls">
                 <h2>文件索引</h2>
-                <!-- 在控制区域添加新按钮 -->
+                <!-- 添加目录导航区域 -->
+                <div class="directory-navigation">
+                    <div class="current-path">
+                        <span>当前路径：</span>
+                        <span id="current-path-display">请选择文件夹</span>
+                        <button id="select-folder-btn" class="btn secondary">选择文件夹</button>
+                        <button id="go-up-btn" class="btn secondary" disabled>上级目录</button>
+                    </div>
+                </div>
                 <div class="controls">
-                    <button id="add-file-index-btn" class="btn primary">添加文件</button>
-                    <button id="read-folder-btn" class="btn secondary">读取项目文件夹</button>
                     <div class="search-box">
                         <input type="text" id="file-search" placeholder="搜索文件...">
                         <button id="search-btn" class="btn">搜索</button>
@@ -36,7 +42,7 @@
             </section>
             
             <section class="file-tags">
-                <h3>标签筛选</h3>
+                <h3>标签筛选 <button id="toggle-tags-btn" class="btn mini">展开/收起</button></h3>
                 <div class="tags-container" id="file-tags">
                     <!-- 标签将通过JavaScript动态生成 -->
                 </div>

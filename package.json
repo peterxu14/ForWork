@@ -4,6 +4,18 @@
   "description": "工作汇报系统",
   "main": "main.js",
   "scripts": {
-    "start": "chcp 65001 && electron ."
-  }
+    "start": "chcp 65001 && electron .",
+    "dev": "electron .",
+    "build": "electron-builder"
+  },
+  "devDependencies": {
+    "electron": "^latest"
+  },
+  "author": "peterxu14",
+  "license": "MIT",
+  "keywords": [
+    "electron",
+    "work-report",
+    "productivity"
+  ]
 }
